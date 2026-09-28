@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teacher-desk"
+version = "0.9.0"
+description = "課務台：時間表提醒、文件工具、座位表與可擴充模組選單"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "課務台" }]
+dependencies = [
+    "PySide6>=6.6",
+    "pypdf>=5.0",
+    "openpyxl>=3.1",
+    "reportlab>=4.2",
+    "python-docx>=1.1",
+    "pypdfium2>=4.30",
+    "Pillow>=10.0",
+    "pillow-heif>=1.0",
+    "imageio-ffmpeg>=0.6",
+    "zxing-cpp>=3.0",
+]
+
+[project.optional-dependencies]
+word = ["pywin32>=306"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+kewutai = "teacher_desk.app:main"
+teacher-desk = "teacher_desk.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,9 @@
+- 課務台 is a Python 3.10+ PySide6 desktop workbench with a modular left sidebar. The internal package remains teacher_desk for compatibility.
+- Package root: src/teacher_desk. Register new tools in src/teacher_desk/modules/registry.py.
+- UI language: Traditional Chinese and English, switchable in Settings. Data stays in local SQLite (app data TeacherDesk).
+- Word to PDF needs LibreOffice or Microsoft Word on the machine.
+- Roster module is 組別與學生: groups (classes table) can mix students from different 班別; each student has class_name.
+- Existing Python MC grader is launched as an external .py/.exe from the 選擇題批改 module.
+- CheckMate search scans all local drives for CheckMate.exe. If none is found, download and silently install from the GitHub release URL (default https://github.com/kenkmc/Checkmate/releases/tag/v1.7.1) into D:\CheckMate.
+- Tests: pytest from repo root. Run app: python -m teacher_desk
+- VS Code: launch "Run 課務台"; tasks "Run 課務台 tests" and "Run 課務台".
