@@ -7,6 +7,7 @@ from PySide6.QtCore import QObject, QThread, Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QDialog,
     QFileDialog,
     QHBoxLayout,
     QHeaderView,
@@ -25,6 +26,58 @@ from teacher_desk.db import Database, TimetableEntry
 from teacher_desk.language import is_english
 from teacher_desk.services.timetable_import import WEEKDAYS, extract_timetable_text, parse_timetable_text
 from teacher_desk.services.timetable_vision import DEFAULT_MODEL, DEFAULT_OPENROUTER_MODEL
+
+
+OPENROUTER_KEYS_URL = "https://openrouter.ai/settings/keys"
+OPENROUTER_GUIDE_URL = "https://openrouter.ai/docs/quickstart"
+NVIDIA_OCR_URL = "https://build.nvidia.com/nvidia/nemotron-ocr-v2"
+NVIDIA_GUIDE_URL = "https://docs.api.nvidia.com/nim/re/docs/api-quickstart"
+
+
+class ApiKeyHelpDialog(QDialog):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("申請雲端 AI 與取得 API key")
+        self.setMinimumWidth(540)
+        layout = QVBoxLayout(self)
+
+        self._add_provider(
+            layout,
+            "OpenRouter",
+            "OpenRouter 透過同一個 API 提供多種 AI 模型。本程式只接受免費模型；請選擇支援圖片輸入的模型。",
+            "1. 在 OpenRouter 登入或建立帳戶。\n2. 打開 API Keys 頁，建立新 key 並複製。\n3. 返回本頁，選「雲端 AI（OpenRouter）」並貼上 key。",
+            (("OpenRouter API Keys", OPENROUTER_KEYS_URL), ("OpenRouter 官方說明", OPENROUTER_GUIDE_URL)),
+        )
+        self._add_provider(
+            layout,
+            "NVIDIA Nemotron OCR v2",
+            "NVIDIA API Catalog 提供 Nemotron OCR v2，用於圖片文字辨識。",
+            "1. 開啟 Nemotron OCR v2 模型頁並按 Get API Key。\n2. 登入或建立 NVIDIA 帳戶，依畫面提示取得並複製 key。\n3. 返回本頁，選「NVIDIA Nemotron OCR v2（雲端）」並貼上 key。",
+            (("NVIDIA 模型及取 key 頁", NVIDIA_OCR_URL), ("NVIDIA 官方申請教學", NVIDIA_GUIDE_URL)),
+        )
+        note = QLabel("API key 只在本次程式執行期間保留於記憶體；雲端辨識會上傳所選圖片或 PDF 頁面。使用額度及費用以各平台顯示為準。")
+        note.setWordWrap(True)
+        layout.addWidget(note)
+        close_button = QPushButton("關閉說明")
+        close_button.clicked.connect(self.accept)
+        layout.addWidget(close_button, alignment=Qt.AlignmentFlag.AlignRight)
+
+    @staticmethod
+    def _add_provider(layout: QVBoxLayout, name: str, summary: str, steps: str, links: tuple[tuple[str, str], ...]) -> None:
+        heading = QLabel(name)
+        heading.setStyleSheet("font-weight: 700; margin-top: 10px;")
+        layout.addWidget(heading)
+        for text in (summary, steps):
+            label = QLabel(text)
+            label.setWordWrap(True)
+            layout.addWidget(label)
+        row = QHBoxLayout()
+        for title, url in links:
+            link = QLabel(f'<a href="{url}">{title}</a>')
+            link.setOpenExternalLinks(True)
+            row.addWidget(link)
+        row.addStretch()
+        layout.addLayout(row)
 
 
 class ImportWorker(QObject):
@@ -95,6 +148,9 @@ class TimetableWidget(QWidget):
 
         credentials = QHBoxLayout()
         credentials.addWidget(self.api_key)
+        self.api_key_help_button = QPushButton("如何申請及取得 API key？")
+        self.api_key_help_button.clicked.connect(self._show_api_key_help)
+        credentials.addWidget(self.api_key_help_button)
         credentials.addWidget(self.cloud_notice, 1)
         layout.addLayout(credentials)
         self.ocr_method.setCurrentIndex(self.ocr_method.findData("nvidia"))
@@ -196,6 +252,7 @@ class TimetableWidget(QWidget):
         self.model_name.setVisible(method in {"vision", "openrouter"})
         show_cloud = cloud_provider is not None
         self.api_key.setVisible(show_cloud)
+        self.api_key_help_button.setVisible(show_cloud)
         self.cloud_notice.setVisible(show_cloud)
         if method == "nvidia":
             self.api_key.setPlaceholderText("貼上 NVIDIA API key（只保留於記憶體）")
@@ -203,6 +260,9 @@ class TimetableWidget(QWidget):
         elif method == "openrouter":
             self.api_key.setPlaceholderText("貼上 OpenRouter API key（只保留於記憶體）")
             self.cloud_notice.setText("圖片或 PDF 頁面會上傳至 OpenRouter 及其模型供應商。")
+
+    def _show_api_key_help(self) -> None:
+        ApiKeyHelpDialog(self).exec()
 
     def _import_file(self) -> None:
         if self.thread is not None:

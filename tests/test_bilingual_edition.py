@@ -22,9 +22,10 @@ def test_bilingual_ui_switches_with_saved_language(tmp_path: Path) -> None:
     code = textwrap.dedent("""
         from pathlib import Path
         from unittest.mock import patch
-        from PySide6.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication, QLabel
         from teacher_desk.db import Database
         from teacher_desk.language import LANGUAGE_SETTING, load_language, set_language
+        from teacher_desk.modules.timetable.widget import ApiKeyHelpDialog
         from teacher_desk.services.timetable_import import parse_timetable_text
         from teacher_desk.ui.main_window import MainWindow
 
@@ -35,6 +36,9 @@ def test_bilingual_ui_switches_with_saved_language(tmp_path: Path) -> None:
         set_language('zh')
         chinese = MainWindow(database)
         assert chinese.modules[0].title == '組別與學生'
+        chinese_help = ApiKeyHelpDialog(chinese)
+        assert chinese_help.windowTitle() == '申請雲端 AI 與取得 API key'
+        chinese_help.close()
         database.set_setting(LANGUAGE_SETTING, 'en')
         set_language(load_language(database))
         english = MainWindow(database)
@@ -44,6 +48,20 @@ def test_bilingual_ui_switches_with_saved_language(tmp_path: Path) -> None:
         assert settings.language_box.itemText(0) == 'Traditional Chinese'
         assert settings.apply_language_button.text() == 'Apply language and restart'
         timetable = english.stack.widget(1)
+        assert timetable.api_key_help_button.text() == 'How to get an API key'
+        help_dialog = ApiKeyHelpDialog(english)
+        assert help_dialog.windowTitle() == 'Sign up for cloud AI and get an API key'
+        help_labels = help_dialog.findChildren(QLabel)
+        assert any('Sign in to OpenRouter' in label.text() for label in help_labels)
+        assert any('Get API Key' in label.text() for label in help_labels)
+        links = [label for label in help_labels if label.openExternalLinks()]
+        assert any('https://openrouter.ai/settings/keys' in label.text() for label in links)
+        assert any('https://build.nvidia.com/nvidia/nemotron-ocr-v2' in label.text() for label in links)
+        help_dialog.close()
+        timetable.ocr_method.setCurrentIndex(timetable.ocr_method.findData('standard'))
+        assert timetable.api_key_help_button.isHidden()
+        timetable.ocr_method.setCurrentIndex(timetable.ocr_method.findData('nvidia'))
+        assert not timetable.api_key_help_button.isHidden()
         timetable._add_blank_row()
         assert timetable.table.cellWidget(0, 0).itemText(0) == 'Monday'
         assert parse_timetable_text('星期一 08:30-09:15 1A 中文 201室')

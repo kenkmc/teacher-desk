@@ -27,7 +27,7 @@
 
 ### Windows 免安裝版本
 
-下載 [TeacherDesk-0.9.0-Windows-x64.exe](https://github.com/kenkmc/teacher-desk/releases/download/v0.9.0/TeacherDesk-0.9.0-Windows-x64.exe) 後，在 Windows 10／11（64 位元）雙擊執行即可；不需要預先安裝 Python 或 Python 模組。這個版本內建繁體中文與英文介面，可在「設定」選擇語言並按「套用語言並重新啟動」。程式會自動重啟，語言選擇保存在本機，已儲存的資料不會清除。未儲存的輸入內容會在切換時清除。
+下載 [TeacherDesk-0.9.1-Windows-x64.exe](https://github.com/kenkmc/teacher-desk/releases/download/v0.9.1/TeacherDesk-0.9.1-Windows-x64.exe) 後，在 Windows 10／11（64 位元）雙擊執行即可；不需要預先安裝 Python 或 Python 模組。這個版本內建繁體中文與英文介面，可在「設定」選擇語言並按「套用語言並重新啟動」。程式會自動重啟，語言選擇保存在本機，已儲存的資料不會清除。未儲存的輸入內容會在切換時清除。
 
 免安裝版已連同英文和繁體中文 Tesseract OCR、HEIC 解碼器、FFmpeg 影片轉換器和本機 QR 解碼器打包。NVIDIA／OpenRouter 雲端辨識仍需要自行輸入 API key 和網絡連線。
 
@@ -78,9 +78,27 @@ Excel／CSV 第一列標題可為：`班別`、`學號`、`中文姓名`、`英�
 
 如一般 OCR 未能讀好方格式時間表，可安裝 [Ollama](https://ollama.com/download)，並在命令列執行 `ollama pull qwen3-vl:2b`。在匯入前選「本機 AI（Ollama）」及模型 `qwen3-vl:2b`；模型在本機運行，首次下載約需數 GB 空間，CPU 辨識可能較慢。若已下載其他 Ollama 視覺模型，可在模型欄輸入其名稱。AI 只會輸出帶有明確開始及結束時間的項目；辨識結果仍須人工核對。
 
-如已取得 NVIDIA API key，在「時間表與提醒」選「NVIDIA Nemotron OCR v2（雲端）」，將 key 貼到遮蔽的欄位，再匯入圖片或 PDF。OCR 文字會按辨識座標重組為時間表，請在預覽表核對後儲存。key 只保留於程式記憶體，不寫入設定或資料庫；關閉程式後須重新輸入。每個 PDF 頁面都會送至 NVIDIA 進行辨識；Excel 和 Word 則直接讀取檔案資料。
+### 申請雲端 AI 平台與取得 API key
 
-如想使用免費雲端模型，可在 [OpenRouter](https://openrouter.ai/settings/keys) 建立 API key，於匯入前選「雲端 AI（OpenRouter）」並貼上 key。預設模型是 `google/gemma-4-31b-it:free`；亦可填入其他以 `:free` 結尾的視覺模型，或 `openrouter/free`。程式不把 key 寫入設定或資料庫，關閉後須重新輸入。選用雲端辨識時，圖片及 PDF 頁面會送到 OpenRouter；PDF 每頁各用一次請求。免費模型有請求次數限制，模型供應及辨識品質可能變動。
+在程式的「時間表與提醒」頁，API key 欄旁也可按「如何申請及取得 API key？」查看這些步驟及開啟官方網站。
+
+**OpenRouter** 透過單一 API 提供多種 AI 模型。本程式只接受免費模型；匯入圖片或掃描 PDF 時須選用支援圖片輸入的模型。
+
+1. 在 [OpenRouter](https://openrouter.ai/) 建立帳戶或登入。
+2. 打開官方 [API Keys 頁](https://openrouter.ai/settings/keys)，建立新的 API key，並立即複製保存。
+3. 返回程式，選「雲端 AI（OpenRouter）」並把 key 貼到遮蔽欄位。詳見 [OpenRouter 官方入門說明](https://openrouter.ai/docs/quickstart)。
+
+**NVIDIA API Catalog** 提供 Nemotron OCR v2 圖片文字辨識服務。
+
+1. 開啟 [Nemotron OCR v2 模型頁](https://build.nvidia.com/nvidia/nemotron-ocr-v2)，按 **Get API Key**。
+2. 登入或建立 NVIDIA 帳戶，依畫面提示取得並複製 key。
+3. 返回程式，選「NVIDIA Nemotron OCR v2（雲端）」並貼上 key。詳見 [NVIDIA 官方申請教學](https://docs.api.nvidia.com/nim/re/docs/api-quickstart)。
+
+兩個平台的使用額度、限速及費用可能改變，請以各平台顯示為準。不要把 key 放進公開文件或 GitHub；本程式只在執行期間把輸入的 key 保留於記憶體。
+
+取得 NVIDIA API key 後，選「NVIDIA Nemotron OCR v2（雲端）」並匯入圖片或 PDF。OCR 文字會按辨識座標重組為時間表，請在預覽表核對後儲存。每個 PDF 頁面都會送至 NVIDIA 進行辨識；Excel 和 Word 則直接讀取檔案資料。
+
+取得 OpenRouter API key 後，選「雲端 AI（OpenRouter）」並貼上 key。預設模型是 `google/gemma-4-31b-it:free`；亦可填入其他以 `:free` 結尾的視覺模型，或 `openrouter/free`。選用雲端辨識時，圖片及 PDF 頁面會送到 OpenRouter；PDF 每頁各用一次請求。免費模型有請求次數限制，模型供應及辨識品質可能變動。
 
 匯入後會自動建立可編輯的時間表及提醒草稿，每項預設提前 10 分鐘提醒。文字擠疊而無法可靠辨識的格會標示「需核對」，並暫停該項提醒。請核對星期、時間和課堂名稱，必要時直接編輯或新增一列，最後按「儲存時間表及提醒」。按 X 後，課務台仍在系統通知區執行並顯示提醒；按左側底部「完全結束程式」或在通知區選擇「結束課務台」才會完全退出。電腦關機或程式完全退出時不會發出提醒。
 
